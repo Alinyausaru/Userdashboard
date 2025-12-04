@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { CarRentalDashboard } from "./components/CarRentalDashboard";
 import { CustomerWebsite } from "./components/CustomerWebsite";
+import { Chatbot } from "./components/Chatbot";
+import { VoiceAIAssistant } from "./components/VoiceAIAssistant";
 import { createClient } from "./utils/supabase/client";
 
-const DEV_BYPASS_ADMIN = true;
-
 export default function App() {
-  const [mode, setMode] = useState<"customer" | "admin">("customer");
+  const [mode, setMode] = useState<"customer" | "admin">(
+    "customer",
+  );
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -14,14 +16,11 @@ export default function App() {
   }, []);
 
   const checkAdminStatus = async () => {
-    if (DEV_BYPASS_ADMIN) {
-      setIsAdmin(true);
-      return;
-    }
-
     try {
       const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (session?.user?.user_metadata?.role === "admin") {
         setIsAdmin(true);
@@ -29,6 +28,10 @@ export default function App() {
     } catch (error) {
       console.error("Failed to check admin status:", error);
     }
+  };
+
+  const switchToAdmin = () => {
+    setMode("admin");
   };
 
   // Toggle between customer and admin views
@@ -45,6 +48,8 @@ export default function App() {
           </button>
         </div>
         <CarRentalDashboard />
+        <Chatbot mode="admin" />
+        <VoiceAIAssistant companyName="Auto Rent" mode="admin" />
       </div>
     );
   }
@@ -62,7 +67,9 @@ export default function App() {
           </button>
         </div>
       )}
-      <CustomerWebsite />
+      <CustomerWebsite onSwitchToAdmin={switchToAdmin} />
+      <Chatbot mode="customer" />
+      <VoiceAIAssistant companyName="Auto Rent" mode="customer" />
     </div>
   );
 }
